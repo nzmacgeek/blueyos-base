@@ -1,0 +1,5 @@
+root:x:0:root
+daemon:x:1:daemon
+bin:x:2:bin
+sys:x:3:sys
+nogroup:x:65534:

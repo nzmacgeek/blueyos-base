@@ -1,0 +1,14 @@
+{
+  "name": "blueyos-base",
+  "version": "0.1.0",
+  "arch": "noarch",
+  "description": "Base system files for BlueyOS (passwd, group, issue, motd)",
+  "depends": [],
+  "recommends": [],
+  "conflicts": [],
+  "provides": [],
+  "maintainer": "BlueyOS Maintainers <maintainers@blueyos.example>",
+  "homepage": "https://github.com/nzmacgeek/blueyos-base",
+  "files": [],
+  "scripts": {}
+}
