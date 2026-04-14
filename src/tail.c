@@ -42,6 +42,10 @@ static void tail_file(FILE *fp, int nlines) {
     while (fgets(buf, sizeof(buf), fp)) {
         free(ring[head]);
         ring[head] = strdup(buf);
+        if (!ring[head]) {
+            fprintf(stderr, "tail: out of memory\n");
+            break;
+        }
         head = (head + 1) % nlines;
         if (count < nlines) count++;
     }

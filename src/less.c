@@ -142,7 +142,10 @@ static void read_and_view(FILE *fp) {
     char buf[4096];
     while (count < MAX_LINES && fgets(buf, sizeof(buf), fp)) {
         lines[count] = strdup(buf);
-        if (!lines[count]) break;
+        if (!lines[count]) {
+            fprintf(stderr, "less: out of memory\n");
+            break;
+        }
         count++;
     }
     view_lines(lines, count);

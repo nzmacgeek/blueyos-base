@@ -110,7 +110,13 @@ int main(int argc, char *argv[]) {
             if (wi > 0) {
                 word[wi] = '\0';
                 if (input_count < 4095) {
-                    input_args[input_count++] = strdup(word);
+                    char *dup = strdup(word);
+                    if (!dup) {
+                        fprintf(stderr, "xargs: out of memory\n");
+                        for (int j = 0; j < input_count; j++) free(input_args[j]);
+                        return 1;
+                    }
+                    input_args[input_count++] = dup;
                 }
                 wi = 0;
             }
@@ -121,7 +127,13 @@ int main(int argc, char *argv[]) {
     if (wi > 0) {
         word[wi] = '\0';
         if (input_count < 4095) {
-            input_args[input_count++] = strdup(word);
+            char *dup = strdup(word);
+            if (!dup) {
+                fprintf(stderr, "xargs: out of memory\n");
+                for (int j = 0; j < input_count; j++) free(input_args[j]);
+                return 1;
+            }
+            input_args[input_count++] = dup;
         }
     }
 

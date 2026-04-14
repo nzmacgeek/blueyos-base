@@ -405,13 +405,10 @@ int main(int argc, char *argv[]) {
                 } else {
                     /* Remove user from this group if they're in it */
                     struct group *grp = getgrnam(gname);
-                    if (grp && user_in_list(username, grp->gr_mem ? *grp->gr_mem : NULL)) {
-                        /* Check member list properly */
+                    if (grp && grp->gr_mem) {
                         int found_in_grp = 0;
-                        if (grp->gr_mem) {
-                            for (char **m = grp->gr_mem; *m; m++) {
-                                if (strcmp(*m, username) == 0) { found_in_grp = 1; break; }
-                            }
+                        for (char **m = grp->gr_mem; *m; m++) {
+                            if (strcmp(*m, username) == 0) { found_in_grp = 1; break; }
                         }
                         if (found_in_grp) {
                             if (modify_group(gname, username, 0) < 0) {
