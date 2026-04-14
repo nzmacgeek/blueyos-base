@@ -1,14 +1,22 @@
 {
   "name": "blueyos-base",
-  "version": "0.1.0",
-  "arch": "noarch",
-  "description": "Base system files for BlueyOS (passwd, group, issue, motd)",
+  "version": "0.1.0+2",
+  "arch": "i386",
+  "description": "Base system files and utilities for BlueyOS (passwd, group, issue, motd, find, grep, sed)",
   "depends": [],
   "recommends": [],
   "conflicts": [],
-  "provides": [],
+  "provides": ["find", "grep", "sed"],
   "maintainer": "BlueyOS Maintainers <maintainers@blueyos.example>",
   "homepage": "https://github.com/nzmacgeek/blueyos-base",
-  "files": [],
+  "files": [
+    "/etc/passwd",
+    "/etc/group",
+    "/etc/issue",
+    "/etc/motd",
+    "/usr/bin/find",
+    "/usr/bin/grep",
+    "/usr/bin/sed"
+  ],
   "scripts": {}
 }
