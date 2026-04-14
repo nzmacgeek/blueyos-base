@@ -50,11 +50,11 @@ static gid_t find_next_gid(int system_group) {
     FILE *fp;
     char line[MAX_LINE];
     gid_t max_gid = system_group ? 99 : 999;
-    gid_t gid_limit = system_group ? 999 : 60000;
+    gid_t gid_limit = system_group ? 1000 : 60000;
 
     fp = fopen(GROUP_FILE, "r");
     if (!fp) {
-        return max_gid;
+        return max_gid + 1; /* 100 for system, 1000 for user */
     }
 
     while (fgets(line, sizeof(line), fp)) {

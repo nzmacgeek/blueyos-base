@@ -48,8 +48,8 @@ static int read_key(int tty_fd) {
             if (n > 0) {
                 if (buf[2] == 'A') return 'k'; /* up arrow = up */
                 if (buf[2] == 'B') return 'j'; /* down arrow = down */
-                if (buf[2] == '5') { read(tty_fd, buf+3, 1); return 'f'; } /* PgUp */
-                if (buf[2] == '6') { read(tty_fd, buf+3, 1); return 'b'; } /* PgDn */
+                if (buf[2] == '5') { read(tty_fd, buf+3, 1); return 'b'; } /* PgUp = backward */
+                if (buf[2] == '6') { read(tty_fd, buf+3, 1); return 'f'; } /* PgDn = forward */
             }
         }
         return 27;

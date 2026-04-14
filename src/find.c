@@ -107,10 +107,8 @@ static void find_recursive(const char *path, int depth) {
             continue;
         }
 
-        /* Recurse into subdirectories */
-        if (S_ISDIR(st.st_mode)) {
-            find_recursive(fullpath, depth + 1);
-        }
+        /* Recurse: for dirs, recurse into them; for files, call to print */
+        find_recursive(fullpath, depth + 1);
     }
 
     closedir(dir);

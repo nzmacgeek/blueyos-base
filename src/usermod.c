@@ -110,12 +110,21 @@ static char *remove_user_from_list(const char *user, const char *members) {
     }
 
     token = strtok_r(list_copy, ",", &saveptr);
+    size_t pos = 0;
     while (token) {
         if (strcmp(token, user) != 0) {
+            size_t tlen = strlen(token);
             if (!first) {
-                strncat(new_list, ",", buflen - strlen(new_list) - 1);
+                if (pos + 1 < buflen) {
+                    new_list[pos++] = ',';
+                    new_list[pos] = '\0';
+                }
             }
-            strncat(new_list, token, buflen - strlen(new_list) - 1);
+            if (pos + tlen < buflen) {
+                memcpy(new_list + pos, token, tlen);
+                pos += tlen;
+                new_list[pos] = '\0';
+            }
             first = 0;
         }
         token = strtok_r(NULL, ",", &saveptr);
