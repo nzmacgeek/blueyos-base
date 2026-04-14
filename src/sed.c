@@ -108,7 +108,9 @@ static int parse_substitute_command(const char *cmd, sed_command_t *sc) {
 
     sc->type = CMD_SUBSTITUTE;
     sc->pattern = strdup(pattern);
+    if (!sc->pattern) { return -1; }
     sc->replacement = strdup(replacement);
+    if (!sc->replacement) { free(sc->pattern); sc->pattern = NULL; return -1; }
     sc->global = (state >= 2) && sc->global;
 
     /* Compile regex */
@@ -117,6 +119,8 @@ static int parse_substitute_command(const char *cmd, sed_command_t *sc) {
         char errbuf[256];
         regerror(ret, &sc->regex, errbuf, sizeof(errbuf));
         fprintf(stderr, "sed: invalid pattern: %s\n", errbuf);
+        free(sc->pattern); sc->pattern = NULL;
+        free(sc->replacement); sc->replacement = NULL;
         return -1;
     }
     sc->compiled = 1;
@@ -183,6 +187,14 @@ static char *apply_substitution(const char *line, sed_command_t *sc) {
             /* Move past match */
             p += match.rm_eo;
 
+            if (match.rm_eo == 0) {
+                /* Zero-length match: advance one character to prevent infinite loop */
+                if (result_len < (int)sizeof(result) - 1) {
+                    result[result_len++] = *p;
+                }
+                if (*p) p++;
+            }
+
             /* If not global, copy rest and break */
             if (!sc->global) {
                 int rest_len = strlen(p);
@@ -223,6 +235,10 @@ static int process_file(FILE *in, FILE *out) {
         int delete_line = 0;
         int print_line = 0;
         char *current = strdup(line);
+        if (!current) {
+            fprintf(stderr, "sed: memory allocation failed\n");
+            return -1;
+        }
         char *next;
 
         /* Remove trailing newline */

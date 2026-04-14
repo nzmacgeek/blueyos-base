@@ -20,7 +20,6 @@
 
 #define MAX_LINE 1024
 #define GROUP_FILE "/etc/group"
-#define GROUP_TEMP "/etc/group.tmp"
 
 static int verbose = 0;
 
@@ -70,9 +69,18 @@ static int delete_group(const char *groupname) {
         return -1;
     }
 
-    out = fopen(GROUP_TEMP, "w");
+    char tmppath[] = "/etc/.group.XXXXXX";
+    int tmpfd = mkstemp(tmppath);
+    if (tmpfd < 0) {
+        fprintf(stderr, "groupdel: cannot create temp file: %s\n", strerror(errno));
+        fclose(in);
+        return -1;
+    }
+    out = fdopen(tmpfd, "w");
     if (!out) {
-        fprintf(stderr, "groupdel: cannot create %s: %s\n", GROUP_TEMP, strerror(errno));
+        fprintf(stderr, "groupdel: cannot open temp file: %s\n", strerror(errno));
+        close(tmpfd);
+        unlink(tmppath);
         fclose(in);
         return -1;
     }
@@ -106,14 +114,14 @@ static int delete_group(const char *groupname) {
 
     if (!found) {
         fprintf(stderr, "groupdel: group '%s' does not exist\n", groupname);
-        unlink(GROUP_TEMP);
+        unlink(tmppath);
         return -1;
     }
 
     /* Replace original with temp file */
-    if (rename(GROUP_TEMP, GROUP_FILE) < 0) {
+    if (rename(tmppath, GROUP_FILE) < 0) {
         fprintf(stderr, "groupdel: cannot replace %s: %s\n", GROUP_FILE, strerror(errno));
-        unlink(GROUP_TEMP);
+        unlink(tmppath);
         return -1;
     }
 

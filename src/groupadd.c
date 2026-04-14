@@ -19,7 +19,6 @@
 
 #define MAX_LINE 1024
 #define GROUP_FILE "/etc/group"
-#define GROUP_TEMP "/etc/group.tmp"
 
 static int verbose = 0;
 
@@ -49,7 +48,7 @@ static int gid_exists(gid_t gid) {
 static gid_t find_next_gid(int system_group) {
     FILE *fp;
     char line[MAX_LINE];
-    gid_t max_gid = system_group ? 100 : 1000;
+    gid_t max_gid = system_group ? 99 : 999;
     gid_t gid_limit = system_group ? 999 : 60000;
 
     fp = fopen(GROUP_FILE, "r");
@@ -93,18 +92,42 @@ static gid_t find_next_gid(int system_group) {
     return max_gid;
 }
 
-/* Add group to /etc/group */
+/* Add group to /etc/group atomically via temp file */
 static int add_group(const char *groupname, gid_t gid) {
-    FILE *fp;
-
-    fp = fopen(GROUP_FILE, "a");
-    if (!fp) {
-        fprintf(stderr, "groupadd: cannot open %s: %s\n", GROUP_FILE, strerror(errno));
+    char tmppath[] = "/etc/.group.XXXXXX";
+    int tmpfd = mkstemp(tmppath);
+    if (tmpfd < 0) {
+        fprintf(stderr, "groupadd: cannot create temp file: %s\n", strerror(errno));
         return -1;
     }
 
-    fprintf(fp, "%s:x:%u:\n", groupname, (unsigned int)gid);
-    fclose(fp);
+    /* Copy existing content */
+    FILE *in = fopen(GROUP_FILE, "r");
+    FILE *out = fdopen(tmpfd, "w");
+    if (!out) {
+        fprintf(stderr, "groupadd: cannot open temp file: %s\n", strerror(errno));
+        close(tmpfd);
+        unlink(tmppath);
+        return -1;
+    }
+
+    if (in) {
+        char buf[MAX_LINE];
+        while (fgets(buf, sizeof(buf), in)) {
+            fputs(buf, out);
+        }
+        fclose(in);
+    }
+
+    /* Append new group */
+    fprintf(out, "%s:x:%u:\n", groupname, (unsigned int)gid);
+    fclose(out);
+
+    if (rename(tmppath, GROUP_FILE) < 0) {
+        fprintf(stderr, "groupadd: cannot replace %s: %s\n", GROUP_FILE, strerror(errno));
+        unlink(tmppath);
+        return -1;
+    }
 
     if (verbose >= 2) {
         fprintf(stderr, "Group '%s' added with GID %u\n", groupname, (unsigned int)gid);
@@ -154,7 +177,13 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "groupadd: -g requires an argument\n");
                 return 1;
             }
-            gid = (gid_t)atoi(argv[i]);
+            char *endptr;
+            unsigned long val = strtoul(argv[i], &endptr, 10);
+            if (*endptr != '\0' || val > 59999) {
+                fprintf(stderr, "groupadd: invalid GID '%s'\n", argv[i]);
+                return 1;
+            }
+            gid = (gid_t)val;
             gid_specified = 1;
         } else if (argv[i][0] == '-') {
             fprintf(stderr, "groupadd: unknown option '%s'\n", argv[i]);

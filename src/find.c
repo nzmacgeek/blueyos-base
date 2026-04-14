@@ -69,8 +69,12 @@ static void find_recursive(const char *path, int depth) {
     }
 
     /* Print current path if it matches criteria */
-    if (should_print(path, &st)) {
-        printf("%s\n", path);
+    {
+        const char *base = strrchr(path, '/');
+        base = base ? base + 1 : path;
+        if (should_print(base, &st)) {
+            printf("%s\n", path);
+        }
     }
 
     /* If not a directory, we're done */
@@ -101,11 +105,6 @@ static void find_recursive(const char *path, int depth) {
                 fprintf(stderr, "find: cannot stat '%s': %s\n", fullpath, strerror(errno));
             }
             continue;
-        }
-
-        /* Print if matches criteria */
-        if (should_print(entry->d_name, &st)) {
-            printf("%s\n", fullpath);
         }
 
         /* Recurse into subdirectories */

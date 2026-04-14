@@ -2,11 +2,16 @@
   "name": "blueyos-base",
   "version": "0.1.0+2",
   "arch": "i386",
-  "description": "Base system files and utilities for BlueyOS (passwd, group, issue, motd, find, grep, sed, usermod, gpasswd, groupadd, groupdel, groupmod)",
+  "description": "Base system files and utilities for BlueyOS (passwd, group, issue, motd, find, grep, sed, usermod, gpasswd, groupadd, groupdel, groupmod, uptime, uname, ps, df, du, xargs, print, more, less, link, ln, hostname, tail, head, kill, pgrep, ls, lsof, date, tee)",
   "depends": [],
   "recommends": [],
   "conflicts": [],
-  "provides": ["find", "grep", "sed", "usermod", "gpasswd", "groupadd", "groupdel", "groupmod"],
+  "provides": [
+    "find", "grep", "sed", "usermod", "gpasswd", "groupadd", "groupdel", "groupmod",
+    "uptime", "uname", "ps", "df", "du", "xargs", "print", "more", "less",
+    "link", "ln", "hostname", "tail", "head", "kill", "pgrep", "ls", "lsof",
+    "date", "tee"
+  ],
   "maintainer": "BlueyOS Maintainers <maintainers@blueyos.example>",
   "homepage": "https://github.com/nzmacgeek/blueyos-base",
   "files": [
@@ -21,7 +26,27 @@
     "/usr/bin/gpasswd",
     "/usr/bin/groupadd",
     "/usr/bin/groupdel",
-    "/usr/bin/groupmod"
+    "/usr/bin/groupmod",
+    "/usr/bin/uptime",
+    "/usr/bin/uname",
+    "/usr/bin/ps",
+    "/usr/bin/df",
+    "/usr/bin/du",
+    "/usr/bin/xargs",
+    "/usr/bin/print",
+    "/usr/bin/more",
+    "/usr/bin/less",
+    "/usr/bin/link",
+    "/usr/bin/ln",
+    "/usr/bin/hostname",
+    "/usr/bin/tail",
+    "/usr/bin/head",
+    "/usr/bin/kill",
+    "/usr/bin/pgrep",
+    "/usr/bin/ls",
+    "/usr/bin/lsof",
+    "/usr/bin/date",
+    "/usr/bin/tee"
   ],
   "scripts": {}
 }

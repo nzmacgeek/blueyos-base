@@ -19,7 +19,6 @@
 
 #define MAX_LINE 1024
 #define GROUP_FILE "/etc/group"
-#define GROUP_TEMP "/etc/group.tmp"
 
 static int verbose = 0;
 
@@ -31,12 +30,6 @@ static void print_usage(const char *progname) {
     fprintf(stderr, "  -v, --verbose         Verbose output\n");
     fprintf(stderr, "  --version             Print version\n");
     fprintf(stderr, "  -h, --help            Show this help\n");
-}
-
-/* Check if GID already exists */
-static int gid_exists(gid_t gid) {
-    struct group *grp = getgrgid(gid);
-    return (grp != NULL);
 }
 
 /* Check if group name already exists */
@@ -57,9 +50,18 @@ static int modify_group(const char *oldname, const char *newname, gid_t new_gid,
         return -1;
     }
 
-    out = fopen(GROUP_TEMP, "w");
+    char tmppath[] = "/etc/.group.XXXXXX";
+    int tmpfd = mkstemp(tmppath);
+    if (tmpfd < 0) {
+        fprintf(stderr, "groupmod: cannot create temp file: %s\n", strerror(errno));
+        fclose(in);
+        return -1;
+    }
+    out = fdopen(tmpfd, "w");
     if (!out) {
-        fprintf(stderr, "groupmod: cannot create %s: %s\n", GROUP_TEMP, strerror(errno));
+        fprintf(stderr, "groupmod: cannot open temp file: %s\n", strerror(errno));
+        close(tmpfd);
+        unlink(tmppath);
         fclose(in);
         return -1;
     }
@@ -88,7 +90,7 @@ static int modify_group(const char *oldname, const char *newname, gid_t new_gid,
             fprintf(stderr, "groupmod: malformed line in %s\n", GROUP_FILE);
             fclose(in);
             fclose(out);
-            unlink(GROUP_TEMP);
+            unlink(tmppath);
             return -1;
         }
 
@@ -120,14 +122,14 @@ static int modify_group(const char *oldname, const char *newname, gid_t new_gid,
 
     if (!found) {
         fprintf(stderr, "groupmod: group '%s' does not exist\n", oldname);
-        unlink(GROUP_TEMP);
+        unlink(tmppath);
         return -1;
     }
 
     /* Replace original with temp file */
-    if (rename(GROUP_TEMP, GROUP_FILE) < 0) {
+    if (rename(tmppath, GROUP_FILE) < 0) {
         fprintf(stderr, "groupmod: cannot replace %s: %s\n", GROUP_FILE, strerror(errno));
-        unlink(GROUP_TEMP);
+        unlink(tmppath);
         return -1;
     }
 
@@ -177,7 +179,13 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "groupmod: -g requires an argument\n");
                 return 1;
             }
-            new_gid = (gid_t)atoi(argv[i]);
+            char *endptr;
+            unsigned long val = strtoul(argv[i], &endptr, 10);
+            if (*endptr != '\0' || val > 59999) {
+                fprintf(stderr, "groupmod: invalid GID '%s'\n", argv[i]);
+                return 1;
+            }
+            new_gid = (gid_t)val;
             change_gid = 1;
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--new-name") == 0) {
             if (++i >= argc) {
@@ -216,9 +224,9 @@ int main(int argc, char *argv[]) {
     }
 
     /* If changing GID, check if new GID already exists */
-    if (change_gid && gid_exists(new_gid)) {
-        struct group *grp = getgrgid(new_gid);
-        if (strcmp(grp->gr_name, groupname) != 0) {
+    if (change_gid) {
+        struct group *existing_grp = getgrgid(new_gid);
+        if (existing_grp != NULL && strcmp(existing_grp->gr_name, groupname) != 0) {
             fprintf(stderr, "groupmod: GID %u already exists\n", (unsigned int)new_gid);
             return 4;
         }

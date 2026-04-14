@@ -20,7 +20,6 @@
 
 #define MAX_LINE 1024
 #define GROUP_FILE "/etc/group"
-#define GROUP_TEMP "/etc/group.tmp"
 
 static int verbose = 0;
 
@@ -90,35 +89,42 @@ static char *add_user_to_list(const char *user, const char *members) {
 
 /* Remove a user from a group member list */
 static char *remove_user_from_list(const char *user, const char *members) {
-    char *list_copy, *token, *saveptr;
-    char new_list[MAX_LINE];
+    char *list_copy, *token, *saveptr, *result;
     int first = 1;
 
     if (!members || strlen(members) == 0) {
         return strdup("");
     }
 
-    list_copy = strdup(members);
-    if (!list_copy) {
+    size_t buflen = strlen(members) + 1;
+    char *new_list = malloc(buflen);
+    if (!new_list) {
         return NULL;
     }
-
     new_list[0] = '\0';
+
+    list_copy = strdup(members);
+    if (!list_copy) {
+        free(new_list);
+        return NULL;
+    }
 
     token = strtok_r(list_copy, ",", &saveptr);
     while (token) {
         if (strcmp(token, user) != 0) {
             if (!first) {
-                strcat(new_list, ",");
+                strncat(new_list, ",", buflen - strlen(new_list) - 1);
             }
-            strcat(new_list, token);
+            strncat(new_list, token, buflen - strlen(new_list) - 1);
             first = 0;
         }
         token = strtok_r(NULL, ",", &saveptr);
     }
 
     free(list_copy);
-    return strdup(new_list);
+    result = strdup(new_list);
+    free(new_list);
+    return result;
 }
 
 /* Modify group file to add or remove user from a group */
@@ -128,7 +134,6 @@ static int modify_group(const char *group_name, const char *username, int add) {
     char *name, *pass, *gid, *members;
     char *new_members;
     int found = 0;
-    int modified = 0;
 
     in = fopen(GROUP_FILE, "r");
     if (!in) {
@@ -136,9 +141,18 @@ static int modify_group(const char *group_name, const char *username, int add) {
         return -1;
     }
 
-    out = fopen(GROUP_TEMP, "w");
+    char tmppath[] = "/etc/.group.XXXXXX";
+    int tmpfd = mkstemp(tmppath);
+    if (tmpfd < 0) {
+        fprintf(stderr, "usermod: cannot create temp file: %s\n", strerror(errno));
+        fclose(in);
+        return -1;
+    }
+    out = fdopen(tmpfd, "w");
     if (!out) {
-        fprintf(stderr, "usermod: cannot create %s: %s\n", GROUP_TEMP, strerror(errno));
+        fprintf(stderr, "usermod: cannot open temp file: %s\n", strerror(errno));
+        close(tmpfd);
+        unlink(tmppath);
         fclose(in);
         return -1;
     }
@@ -160,7 +174,7 @@ static int modify_group(const char *group_name, const char *username, int add) {
             fprintf(stderr, "usermod: malformed line in %s\n", GROUP_FILE);
             fclose(in);
             fclose(out);
-            unlink(GROUP_TEMP);
+            unlink(tmppath);
             return -1;
         }
 
@@ -183,7 +197,7 @@ static int modify_group(const char *group_name, const char *username, int add) {
                 fprintf(stderr, "usermod: memory allocation failed\n");
                 fclose(in);
                 fclose(out);
-                unlink(GROUP_TEMP);
+                unlink(tmppath);
                 return -1;
             }
 
@@ -195,7 +209,6 @@ static int modify_group(const char *group_name, const char *username, int add) {
             }
 
             free(new_members);
-            modified = 1;
         } else {
             /* Write original line */
             if (members) {
@@ -211,14 +224,14 @@ static int modify_group(const char *group_name, const char *username, int add) {
 
     if (!found) {
         fprintf(stderr, "usermod: group '%s' does not exist\n", group_name);
-        unlink(GROUP_TEMP);
+        unlink(tmppath);
         return -1;
     }
 
     /* Replace original with temp file */
-    if (rename(GROUP_TEMP, GROUP_FILE) < 0) {
+    if (rename(tmppath, GROUP_FILE) < 0) {
         fprintf(stderr, "usermod: cannot replace %s: %s\n", GROUP_FILE, strerror(errno));
-        unlink(GROUP_TEMP);
+        unlink(tmppath);
         return -1;
     }
 
@@ -342,16 +355,75 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        token = strtok_r(group_copy, ",", &saveptr);
-        while (token) {
-            if (modify_group(token, username, 1) < 0) {
+        if (append_mode) {
+            /* Append mode: just add user to specified groups */
+            token = strtok_r(group_copy, ",", &saveptr);
+            while (token) {
+                if (modify_group(token, username, 1) < 0) {
+                    free(group_copy);
+                    return 6;
+                }
+                if (verbose >= 1) {
+                    printf("User '%s' added to group '%s'\n", username, token);
+                }
+                token = strtok_r(NULL, ",", &saveptr);
+            }
+        } else {
+            /* Set mode: remove from groups not in list, add to groups in list */
+            FILE *fp = fopen(GROUP_FILE, "r");
+            if (!fp) {
+                fprintf(stderr, "usermod: cannot open %s: %s\n", GROUP_FILE, strerror(errno));
                 free(group_copy);
-                return 6;
+                return 1;
             }
-            if (verbose >= 1) {
-                printf("User '%s' added to group '%s'\n", username, token);
+            char line[MAX_LINE];
+            while (fgets(line, sizeof(line), fp)) {
+                char line_copy[MAX_LINE];
+                strncpy(line_copy, line, sizeof(line_copy) - 1);
+                line_copy[sizeof(line_copy) - 1] = '\0';
+                char *gname = strtok(line_copy, ":");
+                if (!gname) continue;
+                /* Check if this group is in the specified list */
+                int in_list = 0;
+                char *gc2 = strdup(groups);
+                if (gc2) {
+                    char *sp2;
+                    char *tk2 = strtok_r(gc2, ",", &sp2);
+                    while (tk2) {
+                        if (strcmp(tk2, gname) == 0) { in_list = 1; break; }
+                        tk2 = strtok_r(NULL, ",", &sp2);
+                    }
+                    free(gc2);
+                }
+                if (in_list) {
+                    /* Add user to this group */
+                    if (modify_group(gname, username, 1) < 0) {
+                        fclose(fp);
+                        free(group_copy);
+                        return 6;
+                    }
+                } else {
+                    /* Remove user from this group if they're in it */
+                    struct group *grp = getgrnam(gname);
+                    if (grp && user_in_list(username, grp->gr_mem ? *grp->gr_mem : NULL)) {
+                        /* Check member list properly */
+                        int found_in_grp = 0;
+                        if (grp->gr_mem) {
+                            for (char **m = grp->gr_mem; *m; m++) {
+                                if (strcmp(*m, username) == 0) { found_in_grp = 1; break; }
+                            }
+                        }
+                        if (found_in_grp) {
+                            if (modify_group(gname, username, 0) < 0) {
+                                fclose(fp);
+                                free(group_copy);
+                                return 6;
+                            }
+                        }
+                    }
+                }
             }
-            token = strtok_r(NULL, ",", &saveptr);
+            fclose(fp);
         }
 
         free(group_copy);
