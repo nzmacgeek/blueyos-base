@@ -230,12 +230,13 @@ install-sysroot: $(BINARIES)
 	@echo "Installed utilities to $(SYSROOT)/usr/bin"
 
 # Create dimsim package
+# Stamps the computed PACKAGE_VERSION into meta/manifest.json, invokes dpkbuild
+# to produce a .dpk archive, then restores the manifest to its committed state.
 package: install
 	@echo "Building package $(PACKAGE_NAME) version $(PACKAGE_VERSION)"
-	@mkdir -p $(BUILD_DIR)
-	@sed 's/"version": "[^"]*"/"version": "$(PACKAGE_VERSION)"/' meta/manifest.json > $(BUILD_DIR)/package.json
-	@echo "Package manifest written to $(BUILD_DIR)/package.json"
-	@echo "Package ready for dimsim"
+	@sed -i 's/"version": "[^"]*"/"version": "$(PACKAGE_VERSION)"/' meta/manifest.json
+	dpkbuild build .
+	@git checkout -- meta/manifest.json
 
 # Basic tests — requires i386-capable execution environment (or qemu-i386)
 test: $(BINARIES)

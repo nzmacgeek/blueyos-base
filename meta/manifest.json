@@ -1,6 +1,6 @@
 {
   "name": "blueyos-base",
-  "version": "0.1.0+2",
+  "version": "0.1.0",
   "arch": "i386",
   "description": "Base system files and utilities for BlueyOS (passwd, group, issue, motd, find, grep, sed, usermod, gpasswd, groupadd, groupdel, groupmod, uptime, uname, ps, df, du, xargs, print, more, less, link, ln, hostname, tail, head, kill, pgrep, ls, lsof, date, tee)",
   "depends": [],
