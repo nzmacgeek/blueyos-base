@@ -16,6 +16,7 @@ This package provides:
 - **find** - Search for files in a directory hierarchy
 - **grep** - Search text using patterns (supports regular expressions)
 - **sed** - Stream editor for text transformations
+- **sort** - Sort lines of text input
 
 ### User and Group Management
 - **usermod** - Modify user account and group membership
@@ -85,6 +86,19 @@ Supported commands:
   s/PATTERN/REPLACEMENT/[g]  Substitute
   d                           Delete line
   p                           Print line
+
+### sort
+
+Sort lines from stdin or files:
+
+```bash
+sort [OPTIONS] [FILE...]
+  -n              Compare according to numeric value
+  -r              Reverse the result of comparisons
+  -u              Output only the first of equal lines
+  -o FILE         Write result to FILE instead of stdout
+  -v, --verbose   Verbose output
+```
 ```
 
 ### usermod

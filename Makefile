@@ -33,8 +33,8 @@ LDFLAGS += -L$(MUSL_LIB)
 
 # Utilities to build
 UTILITIES = find grep sed usermod gpasswd groupadd groupdel groupmod \
-            uptime uname ps df du xargs print more less link ln \
-            hostname tail head kill pgrep ls lsof date tee getent
+			uptime uname ps df du xargs print more less link ln \
+			hostname tail head kill pgrep ls lsof date tee getent sort
 BINARIES = $(addprefix $(BUILD_DIR)/,$(UTILITIES))
 
 # Package info
@@ -163,6 +163,9 @@ $(BUILD_DIR)/tee: $(SRC_DIR)/tee.c | $(BUILD_DIR) musl-check
 $(BUILD_DIR)/getent: $(SRC_DIR)/getent.c | $(BUILD_DIR) musl-check
 	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
 
+$(BUILD_DIR)/sort: $(SRC_DIR)/sort.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
 # Install to payload directory for packaging
 install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/find $(INSTALL_DIR)/find
@@ -194,6 +197,7 @@ install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/date $(INSTALL_DIR)/date
 	install -m 755 $(BUILD_DIR)/tee $(INSTALL_DIR)/tee
 	install -m 755 $(BUILD_DIR)/getent $(INSTALL_DIR)/getent
+	install -m 755 $(BUILD_DIR)/sort $(INSTALL_DIR)/sort
 	@echo "Installed utilities to $(INSTALL_DIR)"
 
 # Install to system sysroot (for image building)
@@ -232,6 +236,7 @@ install-sysroot: $(BINARIES)
 	install -m 755 $(BUILD_DIR)/date $(SYSROOT)/usr/bin/date
 	install -m 755 $(BUILD_DIR)/tee $(SYSROOT)/usr/bin/tee
 	install -m 755 $(BUILD_DIR)/getent $(SYSROOT)/usr/bin/getent
+	install -m 755 $(BUILD_DIR)/sort $(SYSROOT)/usr/bin/sort
 	@echo "Installed utilities to $(SYSROOT)/usr/bin"
 
 # Create dimsim package
@@ -275,6 +280,7 @@ test: $(BINARIES)
 	@$(BUILD_DIR)/date --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/tee --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/getent --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/sort --version | grep -q "$(VERSION)"
 	@echo "Basic version tests passed"
 	@# Test find
 	@$(BUILD_DIR)/find $(SRC_DIR) -name "*.c" > /dev/null
@@ -306,7 +312,8 @@ clean:
 	       $(INSTALL_DIR)/link $(INSTALL_DIR)/ln $(INSTALL_DIR)/hostname \
 	       $(INSTALL_DIR)/tail $(INSTALL_DIR)/head $(INSTALL_DIR)/kill \
 	       $(INSTALL_DIR)/pgrep $(INSTALL_DIR)/ls $(INSTALL_DIR)/lsof \
-	       $(INSTALL_DIR)/date $(INSTALL_DIR)/tee
+	       $(INSTALL_DIR)/date $(INSTALL_DIR)/tee $(INSTALL_DIR)/getent \
+	       $(INSTALL_DIR)/sort
 	@echo "Cleaned build artifacts"
 
 # Show version info

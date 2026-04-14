@@ -1,8 +1,8 @@
 {
   "name": "blueyos-base",
-  "version": "0.1.0",
+  "version": "0.1.0+16",
   "arch": "i386",
-  "description": "Base system files and utilities for BlueyOS (passwd, group, issue, motd, find, grep, sed, usermod, gpasswd, groupadd, groupdel, groupmod, uptime, uname, ps, df, du, xargs, print, more, less, link, ln, hostname, tail, head, kill, pgrep, ls, lsof, date, tee, getent)",
+  "description": "Base system files and utilities for BlueyOS (passwd, group, issue, motd, find, grep, sed, sort, usermod, gpasswd, groupadd, groupdel, groupmod, uptime, uname, ps, df, du, xargs, print, more, less, link, ln, hostname, tail, head, kill, pgrep, ls, lsof, date, tee, getent)",
   "depends": [],
   "recommends": [],
   "conflicts": [],
@@ -10,7 +10,7 @@
     "find", "grep", "sed", "usermod", "gpasswd", "groupadd", "groupdel", "groupmod",
     "uptime", "uname", "ps", "df", "du", "xargs", "print", "more", "less",
     "link", "ln", "hostname", "tail", "head", "kill", "pgrep", "ls", "lsof",
-    "date", "tee", "getent"
+    "date", "tee", "getent", "sort"
   ],
   "maintainer": "BlueyOS Maintainers <maintainers@blueyos.example>",
   "homepage": "https://github.com/nzmacgeek/blueyos-base",
@@ -47,7 +47,8 @@
     "/usr/bin/lsof",
     "/usr/bin/date",
     "/usr/bin/tee",
-    "/usr/bin/getent"
+    "/usr/bin/getent",
+    "/usr/bin/sort"
   ],
   "scripts": {}
 }

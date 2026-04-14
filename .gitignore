@@ -1,0 +1,24 @@
+# Build artifacts
+build/
+*.o
+*.a
+*.so
+*.so.*
+
+# Built binaries
+payload/usr/bin/*
+payload/usr/sbin/*
+payload/usr/lib/*
+
+# Package artifacts
+*.deb
+*.tar.gz
+*.tar.xz
+
+# Build intermediates
+*.d
+*.cmd
+.*.cmd
+
+# dimsim packages (from BlueyOS packaging)
+*.dpkg
