@@ -19,6 +19,7 @@
 
 #define MAX_LINE 1024
 #define GROUP_FILE "/etc/group"
+#define MAX_GID 59999
 
 static int verbose = 0;
 
@@ -179,7 +180,7 @@ int main(int argc, char *argv[]) {
             }
             char *endptr;
             unsigned long val = strtoul(argv[i], &endptr, 10);
-            if (*endptr != '\0' || val > 59999) {
+            if (*endptr != '\0' || val > MAX_GID) {
                 fprintf(stderr, "groupadd: invalid GID '%s'\n", argv[i]);
                 return 1;
             }

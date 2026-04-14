@@ -80,9 +80,9 @@ int main(int argc, char *argv[]) {
         opt_s = opt_n = opt_r = opt_v = opt_m = opt_p = opt_i = 1;
     }
 
-    /* Default: nodename */
+    /* Default: system name (-s), per POSIX */
     if (!opt_s && !opt_n && !opt_r && !opt_v && !opt_m && !opt_p && !opt_i) {
-        opt_n = 1;
+        opt_s = 1;
     }
 
     int first = 1;

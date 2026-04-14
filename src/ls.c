@@ -130,8 +130,6 @@ static void print_entry(const char *path, const char *name, struct stat *st) {
     else    snprintf(timebuf, sizeof(timebuf), "?");
 
     printf("%s %s", timebuf, name);
-
-    /* Symlink target */
     if (S_ISLNK(st->st_mode)) {
         char target[512];
         ssize_t n = readlink(path, target, sizeof(target) - 1);
@@ -142,7 +140,6 @@ static void print_entry(const char *path, const char *name, struct stat *st) {
     }
 
     printf("\n");
-    (void)path;
 }
 
 static void list_dir(const char *path) {

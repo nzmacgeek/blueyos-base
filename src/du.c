@@ -21,9 +21,9 @@ static int opt_human = 0;
 static void print_usage(const char *progname) {
     fprintf(stderr, "Usage: %s [OPTIONS] [FILE...]\n", progname);
     fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  -s    Display only a total for each argument\n");
-    fprintf(stderr, "  -h    Human readable sizes\n");
-    fprintf(stderr, "  -k    Use 1K blocks (default)\n");
+    fprintf(stderr, "  -s        Display only a total for each argument\n");
+    fprintf(stderr, "  -h        Human readable sizes\n");
+    fprintf(stderr, "  -k        Use 1K blocks (default)\n");
     fprintf(stderr, "  -v, --verbose    Verbose output\n");
     fprintf(stderr, "  --version        Print version\n");
     fprintf(stderr, "  --help           Show this help\n");
@@ -100,32 +100,32 @@ int main(int argc, char *argv[]) {
         if (strcmp(argv[i], "--version") == 0) {
             printf("du version %s\n", VERSION);
             return 0;
-        } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-            if (strcmp(argv[i], "-h") == 0 && i + 1 < argc && argv[i+1][0] != '-') {
-                opt_human = 1; /* -h as human-readable, not help */
-            } else if (strcmp(argv[i], "--help") == 0) {
-                print_usage(argv[0]);
-                return 0;
-            } else {
-                opt_human = 1;
-            }
+        } else if (strcmp(argv[i], "--help") == 0) {
+            print_usage(argv[0]);
+            return 0;
         } else if (strcmp(argv[i], "-s") == 0) {
             opt_summary = 1;
+        } else if (strcmp(argv[i], "-h") == 0) {
+            opt_human = 1;
         } else if (strcmp(argv[i], "-k") == 0) {
             /* 1K blocks is default, no-op */
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
             verbose = 1;
-        } else if (argv[i][0] == '-') {
+        } else if (argv[i][0] == '-' && argv[i][1] != '-') {
             /* Handle combined flags like -sh */
             for (int j = 1; argv[i][j]; j++) {
                 if (argv[i][j] == 's') opt_summary = 1;
                 else if (argv[i][j] == 'h') opt_human = 1;
                 else if (argv[i][j] == 'k') { /* no-op */ }
+                else if (argv[i][j] == 'v') verbose = 1;
                 else {
                     fprintf(stderr, "du: unknown option '-%c'\n", argv[i][j]);
                     return 1;
                 }
             }
+        } else if (argv[i][0] == '-') {
+            fprintf(stderr, "du: unknown option '%s'\n", argv[i]);
+            return 1;
         } else {
             if (path_count < 256) paths[path_count++] = argv[i];
         }
