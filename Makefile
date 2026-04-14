@@ -17,7 +17,7 @@ PAYLOAD_DIR = payload
 INSTALL_DIR = $(PAYLOAD_DIR)/usr/bin
 
 # Utilities to build
-UTILITIES = find grep sed usermod gpasswd
+UTILITIES = find grep sed usermod gpasswd groupadd groupdel groupmod
 BINARIES = $(addprefix $(BUILD_DIR)/,$(UTILITIES))
 
 # Package info
@@ -50,6 +50,15 @@ $(BUILD_DIR)/usermod: $(SRC_DIR)/usermod.c | $(BUILD_DIR)
 $(BUILD_DIR)/gpasswd: $(SRC_DIR)/gpasswd.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS)
 
+$(BUILD_DIR)/groupadd: $(SRC_DIR)/groupadd.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS)
+
+$(BUILD_DIR)/groupdel: $(SRC_DIR)/groupdel.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS)
+
+$(BUILD_DIR)/groupmod: $(SRC_DIR)/groupmod.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS)
+
 # Install to payload directory for packaging
 install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/find $(INSTALL_DIR)/find
@@ -57,6 +66,9 @@ install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/sed $(INSTALL_DIR)/sed
 	install -m 755 $(BUILD_DIR)/usermod $(INSTALL_DIR)/usermod
 	install -m 755 $(BUILD_DIR)/gpasswd $(INSTALL_DIR)/gpasswd
+	install -m 755 $(BUILD_DIR)/groupadd $(INSTALL_DIR)/groupadd
+	install -m 755 $(BUILD_DIR)/groupdel $(INSTALL_DIR)/groupdel
+	install -m 755 $(BUILD_DIR)/groupmod $(INSTALL_DIR)/groupmod
 	@echo "Installed utilities to $(INSTALL_DIR)"
 
 # Install to system sysroot (for image building)
@@ -71,6 +83,9 @@ install-sysroot: $(BINARIES)
 	install -m 755 $(BUILD_DIR)/sed $(SYSROOT)/usr/bin/sed
 	install -m 755 $(BUILD_DIR)/usermod $(SYSROOT)/usr/bin/usermod
 	install -m 755 $(BUILD_DIR)/gpasswd $(SYSROOT)/usr/bin/gpasswd
+	install -m 755 $(BUILD_DIR)/groupadd $(SYSROOT)/usr/bin/groupadd
+	install -m 755 $(BUILD_DIR)/groupdel $(SYSROOT)/usr/bin/groupdel
+	install -m 755 $(BUILD_DIR)/groupmod $(SYSROOT)/usr/bin/groupmod
 	@echo "Installed utilities to $(SYSROOT)/usr/bin"
 
 # Create dimsim package
@@ -88,6 +103,9 @@ test: $(BINARIES)
 	@$(BUILD_DIR)/sed --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/usermod --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/gpasswd --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/groupadd --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/groupdel --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/groupmod --version | grep -q "$(VERSION)"
 	@echo "Basic version tests passed"
 	@# Test find
 	@$(BUILD_DIR)/find $(SRC_DIR) -name "*.c" > /dev/null
@@ -102,7 +120,7 @@ test: $(BINARIES)
 
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -f $(INSTALL_DIR)/find $(INSTALL_DIR)/grep $(INSTALL_DIR)/sed $(INSTALL_DIR)/usermod $(INSTALL_DIR)/gpasswd
+	rm -f $(INSTALL_DIR)/find $(INSTALL_DIR)/grep $(INSTALL_DIR)/sed $(INSTALL_DIR)/usermod $(INSTALL_DIR)/gpasswd $(INSTALL_DIR)/groupadd $(INSTALL_DIR)/groupdel $(INSTALL_DIR)/groupmod
 	@echo "Cleaned build artifacts"
 
 # Show version info

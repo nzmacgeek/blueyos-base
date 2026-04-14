@@ -16,8 +16,13 @@ This package provides:
 - **find** - Search for files in a directory hierarchy
 - **grep** - Search text using patterns (supports regular expressions)
 - **sed** - Stream editor for text transformations
+
+### User and Group Management
 - **usermod** - Modify user account and group membership
 - **gpasswd** - Administer /etc/group (add/remove users from groups)
+- **groupadd** - Create new groups
+- **groupdel** - Delete groups
+- **groupmod** - Modify group properties
 
 ## Building
 
@@ -116,6 +121,54 @@ Examples:
 ```
 
 **Note**: Both `usermod` and `gpasswd` require root privileges to modify group membership.
+
+### groupadd
+
+Create a new group:
+
+```bash
+groupadd [OPTIONS] GROUP
+  -g, --gid GID     Use GID for the new group
+  -r, --system      Create a system group (GID 100-999)
+  -v, --verbose     Verbose output
+
+Examples:
+  groupadd developers           # Create a new group with auto-assigned GID
+  groupadd -g 1500 developers   # Create group with specific GID
+  groupadd -r daemon            # Create a system group
+```
+
+### groupdel
+
+Delete a group:
+
+```bash
+groupdel [OPTIONS] GROUP
+  -v, --verbose     Verbose output
+
+Examples:
+  groupdel developers   # Delete the developers group
+
+Note: Cannot delete a group that is the primary group of any user
+```
+
+### groupmod
+
+Modify group properties:
+
+```bash
+groupmod [OPTIONS] GROUP
+  -g, --gid GID         Change the group ID to GID
+  -n, --new-name NAME   Change the group name to NAME
+  -v, --verbose         Verbose output
+
+Examples:
+  groupmod -g 1600 developers        # Change GID
+  groupmod -n devs developers        # Rename group
+  groupmod -g 1600 -n devs developers  # Change both GID and name
+```
+
+**Note**: All group management utilities (`groupadd`, `groupdel`, `groupmod`) require root privileges.
 
 ## Package Information
 
