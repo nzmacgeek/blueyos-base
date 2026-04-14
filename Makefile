@@ -17,7 +17,7 @@ PAYLOAD_DIR = payload
 INSTALL_DIR = $(PAYLOAD_DIR)/usr/bin
 
 # Utilities to build
-UTILITIES = find grep sed
+UTILITIES = find grep sed usermod gpasswd
 BINARIES = $(addprefix $(BUILD_DIR)/,$(UTILITIES))
 
 # Package info
@@ -44,11 +44,19 @@ $(BUILD_DIR)/grep: $(SRC_DIR)/grep.c | $(BUILD_DIR)
 $(BUILD_DIR)/sed: $(SRC_DIR)/sed.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS)
 
+$(BUILD_DIR)/usermod: $(SRC_DIR)/usermod.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS)
+
+$(BUILD_DIR)/gpasswd: $(SRC_DIR)/gpasswd.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS)
+
 # Install to payload directory for packaging
 install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/find $(INSTALL_DIR)/find
 	install -m 755 $(BUILD_DIR)/grep $(INSTALL_DIR)/grep
 	install -m 755 $(BUILD_DIR)/sed $(INSTALL_DIR)/sed
+	install -m 755 $(BUILD_DIR)/usermod $(INSTALL_DIR)/usermod
+	install -m 755 $(BUILD_DIR)/gpasswd $(INSTALL_DIR)/gpasswd
 	@echo "Installed utilities to $(INSTALL_DIR)"
 
 # Install to system sysroot (for image building)
@@ -61,6 +69,8 @@ install-sysroot: $(BINARIES)
 	install -m 755 $(BUILD_DIR)/find $(SYSROOT)/usr/bin/find
 	install -m 755 $(BUILD_DIR)/grep $(SYSROOT)/usr/bin/grep
 	install -m 755 $(BUILD_DIR)/sed $(SYSROOT)/usr/bin/sed
+	install -m 755 $(BUILD_DIR)/usermod $(SYSROOT)/usr/bin/usermod
+	install -m 755 $(BUILD_DIR)/gpasswd $(SYSROOT)/usr/bin/gpasswd
 	@echo "Installed utilities to $(SYSROOT)/usr/bin"
 
 # Create dimsim package
@@ -76,6 +86,8 @@ test: $(BINARIES)
 	@$(BUILD_DIR)/find --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/grep --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/sed --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/usermod --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/gpasswd --version | grep -q "$(VERSION)"
 	@echo "Basic version tests passed"
 	@# Test find
 	@$(BUILD_DIR)/find $(SRC_DIR) -name "*.c" > /dev/null
@@ -90,7 +102,7 @@ test: $(BINARIES)
 
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -f $(INSTALL_DIR)/find $(INSTALL_DIR)/grep $(INSTALL_DIR)/sed
+	rm -f $(INSTALL_DIR)/find $(INSTALL_DIR)/grep $(INSTALL_DIR)/sed $(INSTALL_DIR)/usermod $(INSTALL_DIR)/gpasswd
 	@echo "Cleaned build artifacts"
 
 # Show version info

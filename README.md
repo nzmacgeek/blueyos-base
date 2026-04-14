@@ -16,6 +16,8 @@ This package provides:
 - **find** - Search for files in a directory hierarchy
 - **grep** - Search text using patterns (supports regular expressions)
 - **sed** - Stream editor for text transformations
+- **usermod** - Modify user account and group membership
+- **gpasswd** - Administer /etc/group (add/remove users from groups)
 
 ## Building
 
@@ -79,6 +81,41 @@ Supported commands:
   d                           Delete line
   p                           Print line
 ```
+
+### usermod
+
+Modify user account and group membership:
+
+```bash
+usermod [OPTIONS] USERNAME
+  -aG GROUP       Add user to a group
+  -rG GROUP       Remove user from a group
+  -G GROUPS       Add user to multiple groups (comma-separated)
+  -a, --append    Use with -G to append to existing groups
+  -v, --verbose   Verbose output
+
+Examples:
+  usermod -aG sudo john       # Add john to sudo group
+  usermod -rG sudo john       # Remove john from sudo group
+  usermod -G sudo,users john  # Add john to sudo and users groups
+```
+
+### gpasswd
+
+Administer /etc/group file (simplified interface):
+
+```bash
+gpasswd [OPTIONS] GROUP
+  -a, --add USER      Add USER to GROUP
+  -d, --delete USER   Remove USER from GROUP
+  -v, --verbose       Verbose output
+
+Examples:
+  gpasswd -a john sudo     # Add john to sudo group
+  gpasswd -d john sudo     # Remove john from sudo group
+```
+
+**Note**: Both `usermod` and `gpasswd` require root privileges to modify group membership.
 
 ## Package Information
 
