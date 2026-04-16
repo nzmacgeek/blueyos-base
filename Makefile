@@ -41,7 +41,7 @@ BINARIES = $(addprefix $(BUILD_DIR)/,$(UTILITIES))
 PACKAGE_NAME = blueyos-base
 PACKAGE_VERSION = $(FULL_VERSION)
 
-.PHONY: all clean install package test musl musl-check
+.PHONY: all clean install package test musl musl-check python3-check
 
 all: $(BINARIES)
 
@@ -74,6 +74,12 @@ musl-check:
 
 musl:
 	@bash tools/build-musl.sh --prefix=$(BUILD_DIR)/musl
+
+python3-check:
+	@command -v python3 >/dev/null 2>&1 || { \
+		echo "Error: python3 is required for 'make package' but was not found in PATH"; \
+		exit 1; \
+	}
 
 # Build rules for each utility
 $(BUILD_DIR)/find: $(SRC_DIR)/find.c | $(BUILD_DIR) musl-check
@@ -242,9 +248,10 @@ install-sysroot: $(BINARIES)
 # Create dimsim package
 # Stamps the computed PACKAGE_VERSION into meta/manifest.json, invokes dpkbuild
 # to produce a .dpk archive, then restores the manifest to its committed state.
-package: install
+package: install python3-check
 	@echo "Building package $(PACKAGE_NAME) version $(PACKAGE_VERSION)"
 	@sed -i 's/"version": "[^"]*"/"version": "$(PACKAGE_VERSION)"/' meta/manifest.json
+	@python3 tools/generate_manifest_files.py "$(PAYLOAD_DIR)" meta/manifest.json
 	dpkbuild build .
 	@git checkout -- meta/manifest.json
 

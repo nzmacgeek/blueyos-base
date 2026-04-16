@@ -59,6 +59,7 @@ add a verbosity guard if the message is debug-only.
 - Build numbers are calculated based on the commit by which the target binaries are built from
 - The build and version number should be accessible from all binaries and scripts using '--version'
 - A target should be made available to install the package directly to the BlueyOS sysroot when building an image.
+- Build using the correct architecture target. BlueyOS is currently i386 only so build that way, against musl-blueyos as a libc.
 
 ---
 
