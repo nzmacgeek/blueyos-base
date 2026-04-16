@@ -245,6 +245,7 @@ install-sysroot: $(BINARIES)
 package: install
 	@echo "Building package $(PACKAGE_NAME) version $(PACKAGE_VERSION)"
 	@sed -i 's/"version": "[^"]*"/"version": "$(PACKAGE_VERSION)"/' meta/manifest.json
+	@python3 -c 'import json; from pathlib import Path; payload_root = Path("payload"); manifest_path = Path("meta/manifest.json"); manifest = json.loads(manifest_path.read_text(encoding="utf-8")); manifest["files"] = [{"path": "/" + p.relative_to(payload_root).as_posix()} for p in sorted(payload_root.rglob("*")) if p.is_file() or p.is_symlink()]; manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")'
 	dpkbuild build .
 	@git checkout -- meta/manifest.json
 
