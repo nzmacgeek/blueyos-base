@@ -13,10 +13,35 @@ This package provides:
 - `/etc/motd` - Message of the day
 
 ### Core Utilities
+
+#### Shell/Script Runtime
+- **env** - Display or set environment variables for command execution
+- **printf** - Format and print data (POSIX-compliant)
+- **test** - Evaluate conditional expressions for shell scripts
+
+#### File Operations
+- **cp** - Copy files and directories
+- **mv** - Move/rename files and directories
+- **rm** - Remove files and directories
+- **mkdir** - Create directories
+- **cat** - Concatenate and display files
+- **touch** - Create files or update timestamps
+- **ln** - Create links between files
+
+#### File Permissions & Status
+- **chmod** - Change file permissions
+- **chown** - Change file ownership
+- **stat** - Display file/filesystem status
+
+#### Text Processing & Search
 - **find** - Search for files in a directory hierarchy
 - **grep** - Search text using patterns (supports regular expressions)
 - **sed** - Stream editor for text transformations
 - **sort** - Sort lines of text input
+- **diff** - Compare files line by line
+
+#### Utilities
+- **which** - Locate a command in PATH
 
 ### User and Group Management
 - **usermod** - Modify user account and group membership
