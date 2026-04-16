@@ -28,6 +28,16 @@ static void print_usage(const char *progname) {
 }
 
 static int which_command(const char *cmd) {
+    /* If cmd contains '/', test it directly without PATH search */
+    if (strchr(cmd, '/') != NULL) {
+        struct stat st;
+        if (stat(cmd, &st) == 0 && S_ISREG(st.st_mode) && access(cmd, X_OK) == 0) {
+            printf("%s\n", cmd);
+            return 0;
+        }
+        return -1;
+    }
+
     const char *path_env = getenv("PATH");
     if (!path_env) {
         path_env = "/usr/local/bin:/usr/bin:/bin";
@@ -43,7 +53,7 @@ static int which_command(const char *cmd) {
         snprintf(full_path, sizeof(full_path), "%s/%s", dir, cmd);
 
         struct stat st;
-        if (stat(full_path, &st) == 0 && (st.st_mode & S_IXUSR)) {
+        if (stat(full_path, &st) == 0 && S_ISREG(st.st_mode) && access(full_path, X_OK) == 0) {
             printf("%s\n", full_path);
             found = 1;
             if (!opt_all) break;

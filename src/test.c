@@ -83,6 +83,8 @@ static int test_file(const char *op, const char *path) {
     return 0;
 }
 
+static int eval_error = 0;
+
 static int evaluate(int argc, char *argv[], int start, int end) {
     if (start >= end) return 0;
 
@@ -106,8 +108,21 @@ static int evaluate(int argc, char *argv[], int start, int end) {
         } else if (strcmp(op, "-n") == 0) {
             return arg[0] != '\0';
         } else if (op[0] == '-') {
-            return test_file(op, arg);
+            /* Validate known file test operators */
+            static const char *valid_file_ops[] = {
+                "-e", "-f", "-d", "-L", "-r", "-w", "-x", "-s", NULL
+            };
+            for (int j = 0; valid_file_ops[j]; j++) {
+                if (strcmp(op, valid_file_ops[j]) == 0) {
+                    return test_file(op, arg);
+                }
+            }
+            fprintf(stderr, "test: unknown unary operator '%s'\n", op);
+            eval_error = 1;
+            return 0;
         }
+        fprintf(stderr, "test: missing binary operator\n");
+        eval_error = 1;
         return 0;
     }
 
@@ -125,17 +140,29 @@ static int evaluate(int argc, char *argv[], int start, int end) {
         }
 
         /* Integer comparisons */
-        if (is_integer(left) && is_integer(right)) {
-            int l = atoi(left);
-            int r = atoi(right);
-
-            if (strcmp(op, "-eq") == 0) return l == r;
-            if (strcmp(op, "-ne") == 0) return l != r;
-            if (strcmp(op, "-lt") == 0) return l < r;
-            if (strcmp(op, "-le") == 0) return l <= r;
-            if (strcmp(op, "-gt") == 0) return l > r;
-            if (strcmp(op, "-ge") == 0) return l >= r;
+        static const char *int_ops[] = {
+            "-eq", "-ne", "-lt", "-le", "-gt", "-ge", NULL
+        };
+        for (int j = 0; int_ops[j]; j++) {
+            if (strcmp(op, int_ops[j]) == 0) {
+                if (!is_integer(left) || !is_integer(right)) {
+                    fprintf(stderr, "test: integer expression expected\n");
+                    eval_error = 1;
+                    return 0;
+                }
+                int l = atoi(left);
+                int r = atoi(right);
+                if (strcmp(op, "-eq") == 0) return l == r;
+                if (strcmp(op, "-ne") == 0) return l != r;
+                if (strcmp(op, "-lt") == 0) return l < r;
+                if (strcmp(op, "-le") == 0) return l <= r;
+                if (strcmp(op, "-gt") == 0) return l > r;
+                if (strcmp(op, "-ge") == 0) return l >= r;
+            }
         }
+
+        fprintf(stderr, "test: unknown binary operator '%s'\n", op);
+        eval_error = 1;
         return 0;
     }
 
@@ -152,6 +179,8 @@ static int evaluate(int argc, char *argv[], int start, int end) {
         }
     }
 
+    fprintf(stderr, "test: syntax error\n");
+    eval_error = 1;
     return 0;
 }
 
@@ -183,7 +212,12 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    eval_error = 0;
     int result = evaluate(argc, argv, 1, argc);
+
+    if (eval_error) {
+        return 2;
+    }
 
     if (verbose >= 2) {
         fprintf(stderr, "test: result = %d\n", result);

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
 #include <errno.h>
@@ -69,7 +70,26 @@ static gid_t parse_group(const char *name) {
     return (gid_t)-1;
 }
 
-static int chown_file(const char *path, uid_t uid, gid_t gid);
+static int chown_recursive(const char *path, uid_t uid, gid_t gid);
+
+static int chown_dir(const char *path, uid_t uid, gid_t gid) {
+    DIR *dir = opendir(path);
+    if (!dir) {
+        fprintf(stderr, "chown: cannot open '%s': %s\n", path, strerror(errno));
+        return -1;
+    }
+
+    int ret = 0;
+    struct dirent *ent;
+    while ((ent = readdir(dir)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) continue;
+        char full_path[1024];
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, ent->d_name);
+        if (chown_recursive(full_path, uid, gid) < 0) ret = -1;
+    }
+    closedir(dir);
+    return ret;
+}
 
 static int chown_recursive(const char *path, uid_t uid, gid_t gid) {
     struct stat st;
@@ -91,29 +111,10 @@ static int chown_recursive(const char *path, uid_t uid, gid_t gid) {
     }
 
     if (S_ISDIR(st.st_mode) && opt_recursive) {
-        /* Recursively process directory contents */
-        char cmd[2048];
-        snprintf(cmd, sizeof(cmd), "find '%s' -mindepth 1", path);
-        FILE *fp = popen(cmd, "r");
-        if (!fp) return -1;
-
-        char entry[1024];
-        while (fgets(entry, sizeof(entry), fp)) {
-            /* Remove newline */
-            size_t len = strlen(entry);
-            if (len > 0 && entry[len - 1] == '\n') {
-                entry[len - 1] = '\0';
-            }
-            chown_file(entry, uid, gid);
-        }
-        pclose(fp);
+        return chown_dir(path, uid, gid);
     }
 
     return 0;
-}
-
-static int chown_file(const char *path, uid_t uid, gid_t gid) {
-    return chown_recursive(path, uid, gid);
 }
 
 int main(int argc, char *argv[]) {
@@ -177,7 +178,7 @@ int main(int argc, char *argv[]) {
 
     int ret = 0;
     for (int i = 0; i < file_count; i++) {
-        if (chown_file(files[i], uid, gid) < 0) {
+        if (chown_recursive(files[i], uid, gid) < 0) {
             ret = 1;
         }
     }

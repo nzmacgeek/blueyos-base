@@ -75,8 +75,14 @@ static int remove_dir(const char *path) {
 static int remove_recursive(const char *path) {
     struct stat st;
     if (lstat(path, &st) < 0) {
+        int err = errno;
+
+        if (opt_force && err == ENOENT) {
+            return 0;
+        }
+
         if (!opt_force) {
-            fprintf(stderr, "rm: cannot stat '%s': %s\n", path, strerror(errno));
+            fprintf(stderr, "rm: cannot stat '%s': %s\n", path, strerror(err));
         }
         return -1;
     }

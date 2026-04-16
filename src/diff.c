@@ -157,6 +157,31 @@ int main(int argc, char *argv[]) {
             return 0;
         } else if (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--unified") == 0) {
             opt_unified = 3;
+            /* Check if next argument is a non-negative integer */
+            if (i + 1 < argc) {
+                char *end;
+                long n = strtol(argv[i + 1], &end, 10);
+                if (*end == '\0' && n >= 0) {
+                    opt_unified = (int)n;
+                    i++;
+                }
+            }
+        } else if (strncmp(argv[i], "-u", 2) == 0 && argv[i][2] >= '0' && argv[i][2] <= '9') {
+            char *end;
+            long n = strtol(argv[i] + 2, &end, 10);
+            if (*end != '\0' || n < 0) {
+                fprintf(stderr, "diff: invalid argument for -u: '%s'\n", argv[i] + 2);
+                return 1;
+            }
+            opt_unified = (int)n;
+        } else if (strncmp(argv[i], "--unified=", 10) == 0) {
+            char *end;
+            long n = strtol(argv[i] + 10, &end, 10);
+            if (*end != '\0' || n < 0) {
+                fprintf(stderr, "diff: invalid argument for --unified: '%s'\n", argv[i] + 10);
+                return 1;
+            }
+            opt_unified = (int)n;
         } else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--brief") == 0) {
             opt_brief = 1;
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {

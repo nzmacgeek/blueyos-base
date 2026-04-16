@@ -85,6 +85,10 @@ int main(int argc, char *argv[]) {
     for (; i < argc; i++) {
         if (strchr(argv[i], '=') != NULL) {
             char *name = strdup(argv[i]);
+            if (name == NULL) {
+                fprintf(stderr, "env: failed to duplicate '%s': %s\n", argv[i], strerror(errno));
+                return 1;
+            }
             char *value = strchr(name, '=');
             *value = '\0';
             value++;

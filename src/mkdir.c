@@ -42,14 +42,34 @@ static int mkdir_parents(const char *path, mode_t mode) {
         char save = *p;
         *p = '\0';
 
-        if (*copy && mkdir(copy, mode) < 0 && errno != EEXIST) {
-            fprintf(stderr, "mkdir: cannot create directory '%s': %s\n", copy, strerror(errno));
-            free(copy);
-            return -1;
-        }
+        if (*copy) {
+            int rc = mkdir(copy, mode);
+            if (rc < 0) {
+                if (errno != EEXIST) {
+                    fprintf(stderr, "mkdir: cannot create directory '%s': %s\n", copy, strerror(errno));
+                    free(copy);
+                    return -1;
+                }
 
-        if (verbose >= 1 && *copy) {
-            printf("mkdir: created directory '%s'\n", copy);
+                struct stat st;
+                if (stat(copy, &st) < 0) {
+                    fprintf(stderr, "mkdir: cannot create directory '%s': %s\n", copy, strerror(errno));
+                    free(copy);
+                    return -1;
+                }
+                if (!S_ISDIR(st.st_mode)) {
+                    fprintf(stderr, "mkdir: cannot create directory '%s': Not a directory\n", copy);
+                    free(copy);
+                    return -1;
+                }
+                if (verbose >= 1) {
+                    printf("mkdir: directory '%s' already exists\n", copy);
+                }
+            } else {
+                if (verbose >= 1) {
+                    printf("mkdir: created directory '%s'\n", copy);
+                }
+            }
         }
 
         *p = save;

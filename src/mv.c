@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <errno.h>
 
 #ifndef VERSION
@@ -26,6 +28,130 @@ static void print_usage(const char *progname) {
     fprintf(stderr, "  -v, --verbose    Verbose output\n");
     fprintf(stderr, "  --version        Print version\n");
     fprintf(stderr, "  -h, --help       Show this help\n");
+}
+
+/* Forward declarations */
+static int copy_path(const char *src, const char *dst);
+static int remove_path(const char *path);
+
+static int copy_file_data(const char *src, const char *dst) {
+    int sfd = open(src, O_RDONLY);
+    if (sfd < 0) {
+        fprintf(stderr, "mv: cannot open '%s': %s\n", src, strerror(errno));
+        return -1;
+    }
+
+    struct stat st;
+    if (fstat(sfd, &st) < 0) {
+        fprintf(stderr, "mv: cannot stat '%s': %s\n", src, strerror(errno));
+        close(sfd);
+        return -1;
+    }
+
+    int dfd = open(dst, O_WRONLY | O_CREAT | O_TRUNC, st.st_mode & 0777);
+    if (dfd < 0) {
+        fprintf(stderr, "mv: cannot create '%s': %s\n", dst, strerror(errno));
+        close(sfd);
+        return -1;
+    }
+
+    char buf[8192];
+    ssize_t n;
+    while ((n = read(sfd, buf, sizeof(buf))) > 0) {
+        ssize_t written = 0;
+        while (written < n) {
+            ssize_t rc = write(dfd, buf + written, (size_t)(n - written));
+            if (rc < 0) {
+                if (errno == EINTR) continue;
+                fprintf(stderr, "mv: write error '%s': %s\n", dst, strerror(errno));
+                close(sfd);
+                close(dfd);
+                return -1;
+            }
+            written += rc;
+        }
+    }
+
+    if (n < 0) {
+        fprintf(stderr, "mv: read error '%s': %s\n", src, strerror(errno));
+        close(sfd);
+        close(dfd);
+        return -1;
+    }
+
+    close(sfd);
+    close(dfd);
+    return 0;
+}
+
+static int copy_path(const char *src, const char *dst) {
+    struct stat st;
+    if (lstat(src, &st) < 0) {
+        fprintf(stderr, "mv: cannot stat '%s': %s\n", src, strerror(errno));
+        return -1;
+    }
+
+    if (S_ISDIR(st.st_mode)) {
+        if (mkdir(dst, st.st_mode & 0777) < 0 && errno != EEXIST) {
+            fprintf(stderr, "mv: cannot create directory '%s': %s\n", dst, strerror(errno));
+            return -1;
+        }
+
+        DIR *dir = opendir(src);
+        if (!dir) {
+            fprintf(stderr, "mv: cannot open directory '%s': %s\n", src, strerror(errno));
+            return -1;
+        }
+
+        int ret = 0;
+        struct dirent *ent;
+        while ((ent = readdir(dir)) != NULL) {
+            if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) continue;
+            char src_path[1024], dst_path[1024];
+            snprintf(src_path, sizeof(src_path), "%s/%s", src, ent->d_name);
+            snprintf(dst_path, sizeof(dst_path), "%s/%s", dst, ent->d_name);
+            if (copy_path(src_path, dst_path) < 0) ret = -1;
+        }
+        closedir(dir);
+        return ret;
+    } else if (S_ISLNK(st.st_mode)) {
+        char target[1024];
+        ssize_t len = readlink(src, target, sizeof(target) - 1);
+        if (len < 0) {
+            fprintf(stderr, "mv: cannot read link '%s': %s\n", src, strerror(errno));
+            return -1;
+        }
+        target[len] = '\0';
+        if (symlink(target, dst) < 0) {
+            fprintf(stderr, "mv: cannot create symlink '%s': %s\n", dst, strerror(errno));
+            return -1;
+        }
+        return 0;
+    } else {
+        return copy_file_data(src, dst);
+    }
+}
+
+static int remove_path(const char *path) {
+    struct stat st;
+    if (lstat(path, &st) < 0) return -1;
+
+    if (S_ISDIR(st.st_mode)) {
+        DIR *dir = opendir(path);
+        if (!dir) return -1;
+
+        struct dirent *ent;
+        while ((ent = readdir(dir)) != NULL) {
+            if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) continue;
+            char full_path[1024];
+            snprintf(full_path, sizeof(full_path), "%s/%s", path, ent->d_name);
+            remove_path(full_path);
+        }
+        closedir(dir);
+        return rmdir(path);
+    } else {
+        return unlink(path);
+    }
 }
 
 static int move_file(const char *src, const char *dst) {
@@ -52,24 +178,14 @@ static int move_file(const char *src, const char *dst) {
         return -1;
     }
 
-    /* Cross-device move: copy then delete */
-    /* For simplicity, we'll just use system cp and rm */
-    char cmd[2048];
-    snprintf(cmd, sizeof(cmd), "cp -r %s '%s' '%s'", opt_force ? "-f" : "", src, dst);
-    if (system(cmd) != 0) {
+    /* Cross-device move: copy then delete in-process */
+    if (copy_path(src, dst) < 0) {
         fprintf(stderr, "mv: failed to copy '%s' to '%s'\n", src, dst);
         return -1;
     }
 
-    struct stat st;
-    if (stat(src, &st) == 0 && S_ISDIR(st.st_mode)) {
-        snprintf(cmd, sizeof(cmd), "rm -rf '%s'", src);
-    } else {
-        snprintf(cmd, sizeof(cmd), "rm -f '%s'", src);
-    }
-
-    if (system(cmd) != 0) {
-        fprintf(stderr, "mv: warning: failed to remove '%s'\n", src);
+    if (remove_path(src) < 0) {
+        fprintf(stderr, "mv: warning: failed to remove '%s': %s\n", src, strerror(errno));
     }
 
     if (verbose >= 1) {

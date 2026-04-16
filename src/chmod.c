@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <errno.h>
 
 #ifndef VERSION
@@ -25,14 +26,46 @@ static void print_usage(const char *progname) {
     fprintf(stderr, "  -v, --verbose    Verbose output\n");
     fprintf(stderr, "  --version        Print version\n");
     fprintf(stderr, "  -h, --help       Show this help\n");
-    fprintf(stderr, "\nMODE is octal (e.g., 0755) or symbolic (e.g., u+x,g-w).\n");
+    fprintf(stderr, "\nMODE must be octal (e.g., 0755).\n");
 }
 
 static mode_t parse_octal_mode(const char *str) {
-    return (mode_t)strtol(str, NULL, 8);
+    if (str == NULL || *str == '\0') {
+        fprintf(stderr, "chmod: invalid mode '%s'\n", str ? str : "");
+        exit(2);
+    }
+
+    char *endptr;
+    errno = 0;
+    unsigned long value = strtoul(str, &endptr, 8);
+    if (errno != 0 || endptr == str || *endptr != '\0' || value > (unsigned long)(mode_t)-1) {
+        fprintf(stderr, "chmod: invalid mode '%s'\n", str);
+        exit(2);
+    }
+
+    return (mode_t)value;
 }
 
-static int chmod_file(const char *path, mode_t mode);
+static int chmod_recursive(const char *path, mode_t mode);
+
+static int chmod_dir(const char *path, mode_t mode) {
+    DIR *dir = opendir(path);
+    if (!dir) {
+        fprintf(stderr, "chmod: cannot open '%s': %s\n", path, strerror(errno));
+        return -1;
+    }
+
+    int ret = 0;
+    struct dirent *ent;
+    while ((ent = readdir(dir)) != NULL) {
+        if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) continue;
+        char full_path[1024];
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, ent->d_name);
+        if (chmod_recursive(full_path, mode) < 0) ret = -1;
+    }
+    closedir(dir);
+    return ret;
+}
 
 static int chmod_recursive(const char *path, mode_t mode) {
     struct stat st;
@@ -51,29 +84,10 @@ static int chmod_recursive(const char *path, mode_t mode) {
     }
 
     if (S_ISDIR(st.st_mode) && opt_recursive) {
-        /* Recursively process directory contents */
-        char cmd[2048];
-        snprintf(cmd, sizeof(cmd), "find '%s' -mindepth 1", path);
-        FILE *fp = popen(cmd, "r");
-        if (!fp) return -1;
-
-        char entry[1024];
-        while (fgets(entry, sizeof(entry), fp)) {
-            /* Remove newline */
-            size_t len = strlen(entry);
-            if (len > 0 && entry[len - 1] == '\n') {
-                entry[len - 1] = '\0';
-            }
-            chmod_file(entry, mode);
-        }
-        pclose(fp);
+        return chmod_dir(path, mode);
     }
 
     return 0;
-}
-
-static int chmod_file(const char *path, mode_t mode) {
-    return chmod_recursive(path, mode);
 }
 
 int main(int argc, char *argv[]) {
@@ -119,7 +133,7 @@ int main(int argc, char *argv[]) {
 
     int ret = 0;
     for (int i = 0; i < file_count; i++) {
-        if (chmod_file(files[i], mode) < 0) {
+        if (chmod_recursive(files[i], mode) < 0) {
             ret = 1;
         }
     }

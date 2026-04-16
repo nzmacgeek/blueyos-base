@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <libgen.h>
+#include <time.h>
 
 #ifndef VERSION
 #define VERSION "0.1.0"
@@ -65,11 +66,20 @@ static int copy_file(const char *src, const char *dst) {
     char buf[8192];
     ssize_t n;
     while ((n = read(sfd, buf, sizeof(buf))) > 0) {
-        if (write(dfd, buf, (size_t)n) != n) {
-            fprintf(stderr, "cp: write error '%s': %s\n", dst, strerror(errno));
-            close(sfd);
-            close(dfd);
-            return -1;
+        ssize_t written = 0;
+
+        while (written < n) {
+            ssize_t rc = write(dfd, buf + written, (size_t)(n - written));
+            if (rc < 0) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                fprintf(stderr, "cp: write error '%s': %s\n", dst, strerror(errno));
+                close(sfd);
+                close(dfd);
+                return -1;
+            }
+            written += rc;
         }
     }
 
@@ -83,6 +93,10 @@ static int copy_file(const char *src, const char *dst) {
     if (opt_preserve) {
         fchmod(dfd, st.st_mode);
         fchown(dfd, st.st_uid, st.st_gid);
+        struct timespec times[2];
+        times[0] = st.st_atim;
+        times[1] = st.st_mtim;
+        futimens(dfd, times);
     }
 
     close(sfd);
@@ -136,6 +150,10 @@ static int copy_dir(const char *src, const char *dst) {
     if (opt_preserve) {
         chmod(dst, st.st_mode);
         chown(dst, st.st_uid, st.st_gid);
+        struct timespec times[2];
+        times[0] = st.st_atim;
+        times[1] = st.st_mtim;
+        utimensat(AT_FDCWD, dst, times, 0);
     }
 
     return ret;
@@ -164,8 +182,19 @@ static int copy_recursive(const char *src, const char *dst) {
         target[len] = '\0';
 
         if (symlink(target, dst) < 0) {
-            fprintf(stderr, "cp: cannot create symlink '%s': %s\n", dst, strerror(errno));
-            return -1;
+            if (errno == EEXIST && opt_force) {
+                if (unlink(dst) < 0) {
+                    fprintf(stderr, "cp: cannot remove '%s': %s\n", dst, strerror(errno));
+                    return -1;
+                }
+                if (symlink(target, dst) < 0) {
+                    fprintf(stderr, "cp: cannot create symlink '%s': %s\n", dst, strerror(errno));
+                    return -1;
+                }
+            } else {
+                fprintf(stderr, "cp: cannot create symlink '%s': %s\n", dst, strerror(errno));
+                return -1;
+            }
         }
 
         if (verbose >= 1) {
