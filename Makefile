@@ -34,7 +34,8 @@ LDFLAGS += -L$(MUSL_LIB)
 # Utilities to build
 UTILITIES = find grep sed usermod gpasswd groupadd groupdel groupmod \
 			uptime uname ps df du xargs print more less link ln \
-			hostname tail head kill pgrep ls lsof date tee getent sort
+			hostname tail head kill pgrep ls lsof date tee getent sort \
+			env printf test cp mv rm mkdir cat touch chmod chown stat which diff
 BINARIES = $(addprefix $(BUILD_DIR)/,$(UTILITIES))
 
 # Package info
@@ -172,6 +173,48 @@ $(BUILD_DIR)/getent: $(SRC_DIR)/getent.c | $(BUILD_DIR) musl-check
 $(BUILD_DIR)/sort: $(SRC_DIR)/sort.c | $(BUILD_DIR) musl-check
 	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
 
+$(BUILD_DIR)/env: $(SRC_DIR)/env.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/printf: $(SRC_DIR)/printf.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/test: $(SRC_DIR)/test.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/cp: $(SRC_DIR)/cp.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/mv: $(SRC_DIR)/mv.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/rm: $(SRC_DIR)/rm.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/mkdir: $(SRC_DIR)/mkdir.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/cat: $(SRC_DIR)/cat.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/touch: $(SRC_DIR)/touch.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/chmod: $(SRC_DIR)/chmod.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/chown: $(SRC_DIR)/chown.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/stat: $(SRC_DIR)/stat.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/which: $(SRC_DIR)/which.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/diff: $(SRC_DIR)/diff.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
 # Install to payload directory for packaging
 install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/find $(INSTALL_DIR)/find
@@ -204,6 +247,20 @@ install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/tee $(INSTALL_DIR)/tee
 	install -m 755 $(BUILD_DIR)/getent $(INSTALL_DIR)/getent
 	install -m 755 $(BUILD_DIR)/sort $(INSTALL_DIR)/sort
+	install -m 755 $(BUILD_DIR)/env $(INSTALL_DIR)/env
+	install -m 755 $(BUILD_DIR)/printf $(INSTALL_DIR)/printf
+	install -m 755 $(BUILD_DIR)/test $(INSTALL_DIR)/test
+	install -m 755 $(BUILD_DIR)/cp $(INSTALL_DIR)/cp
+	install -m 755 $(BUILD_DIR)/mv $(INSTALL_DIR)/mv
+	install -m 755 $(BUILD_DIR)/rm $(INSTALL_DIR)/rm
+	install -m 755 $(BUILD_DIR)/mkdir $(INSTALL_DIR)/mkdir
+	install -m 755 $(BUILD_DIR)/cat $(INSTALL_DIR)/cat
+	install -m 755 $(BUILD_DIR)/touch $(INSTALL_DIR)/touch
+	install -m 755 $(BUILD_DIR)/chmod $(INSTALL_DIR)/chmod
+	install -m 755 $(BUILD_DIR)/chown $(INSTALL_DIR)/chown
+	install -m 755 $(BUILD_DIR)/stat $(INSTALL_DIR)/stat
+	install -m 755 $(BUILD_DIR)/which $(INSTALL_DIR)/which
+	install -m 755 $(BUILD_DIR)/diff $(INSTALL_DIR)/diff
 	@echo "Installed utilities to $(INSTALL_DIR)"
 
 # Install to system sysroot (for image building)
@@ -243,6 +300,20 @@ install-sysroot: $(BINARIES)
 	install -m 755 $(BUILD_DIR)/tee $(SYSROOT)/usr/bin/tee
 	install -m 755 $(BUILD_DIR)/getent $(SYSROOT)/usr/bin/getent
 	install -m 755 $(BUILD_DIR)/sort $(SYSROOT)/usr/bin/sort
+	install -m 755 $(BUILD_DIR)/env $(SYSROOT)/usr/bin/env
+	install -m 755 $(BUILD_DIR)/printf $(SYSROOT)/usr/bin/printf
+	install -m 755 $(BUILD_DIR)/test $(SYSROOT)/usr/bin/test
+	install -m 755 $(BUILD_DIR)/cp $(SYSROOT)/usr/bin/cp
+	install -m 755 $(BUILD_DIR)/mv $(SYSROOT)/usr/bin/mv
+	install -m 755 $(BUILD_DIR)/rm $(SYSROOT)/usr/bin/rm
+	install -m 755 $(BUILD_DIR)/mkdir $(SYSROOT)/usr/bin/mkdir
+	install -m 755 $(BUILD_DIR)/cat $(SYSROOT)/usr/bin/cat
+	install -m 755 $(BUILD_DIR)/touch $(SYSROOT)/usr/bin/touch
+	install -m 755 $(BUILD_DIR)/chmod $(SYSROOT)/usr/bin/chmod
+	install -m 755 $(BUILD_DIR)/chown $(SYSROOT)/usr/bin/chown
+	install -m 755 $(BUILD_DIR)/stat $(SYSROOT)/usr/bin/stat
+	install -m 755 $(BUILD_DIR)/which $(SYSROOT)/usr/bin/which
+	install -m 755 $(BUILD_DIR)/diff $(SYSROOT)/usr/bin/diff
 	@echo "Installed utilities to $(SYSROOT)/usr/bin"
 
 # Create dimsim package
@@ -288,6 +359,20 @@ test: $(BINARIES)
 	@$(BUILD_DIR)/tee --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/getent --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/sort --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/env --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/printf --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/test --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/cp --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/mv --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/rm --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/mkdir --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/cat --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/touch --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/chmod --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/chown --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/stat --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/which --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/diff --version | grep -q "$(VERSION)"
 	@echo "Basic version tests passed"
 	@# Test find
 	@$(BUILD_DIR)/find $(SRC_DIR) -name "*.c" > /dev/null
@@ -320,7 +405,12 @@ clean:
 	       $(INSTALL_DIR)/tail $(INSTALL_DIR)/head $(INSTALL_DIR)/kill \
 	       $(INSTALL_DIR)/pgrep $(INSTALL_DIR)/ls $(INSTALL_DIR)/lsof \
 	       $(INSTALL_DIR)/date $(INSTALL_DIR)/tee $(INSTALL_DIR)/getent \
-	       $(INSTALL_DIR)/sort
+	       $(INSTALL_DIR)/sort \
+	       $(INSTALL_DIR)/env $(INSTALL_DIR)/printf $(INSTALL_DIR)/test \
+	       $(INSTALL_DIR)/cp $(INSTALL_DIR)/mv $(INSTALL_DIR)/rm \
+	       $(INSTALL_DIR)/mkdir $(INSTALL_DIR)/cat $(INSTALL_DIR)/touch \
+	       $(INSTALL_DIR)/chmod $(INSTALL_DIR)/chown $(INSTALL_DIR)/stat \
+	       $(INSTALL_DIR)/which $(INSTALL_DIR)/diff
 	@echo "Cleaned build artifacts"
 
 # Show version info

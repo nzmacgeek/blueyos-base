@@ -2,7 +2,7 @@
   "name": "blueyos-base",
   "version": "0.1.0+16",
   "arch": "i386",
-  "description": "Base system files and utilities for BlueyOS (passwd, group, issue, motd, find, grep, sed, sort, usermod, gpasswd, groupadd, groupdel, groupmod, uptime, uname, ps, df, du, xargs, print, more, less, link, ln, hostname, tail, head, kill, pgrep, ls, lsof, date, tee, getent)",
+  "description": "Base system files and utilities for BlueyOS (passwd, group, issue, motd, find, grep, sed, sort, usermod, gpasswd, groupadd, groupdel, groupmod, uptime, uname, ps, df, du, xargs, print, more, less, link, ln, hostname, tail, head, kill, pgrep, ls, lsof, date, tee, getent, env, printf, test, cp, mv, rm, mkdir, cat, touch, chmod, chown, stat, which, diff)",
   "depends": [],
   "recommends": [],
   "conflicts": [],
@@ -10,7 +10,8 @@
     "find", "grep", "sed", "usermod", "gpasswd", "groupadd", "groupdel", "groupmod",
     "uptime", "uname", "ps", "df", "du", "xargs", "print", "more", "less",
     "link", "ln", "hostname", "tail", "head", "kill", "pgrep", "ls", "lsof",
-    "date", "tee", "getent", "sort"
+    "date", "tee", "getent", "sort", "env", "printf", "test", "cp", "mv", "rm",
+    "mkdir", "cat", "touch", "chmod", "chown", "stat", "which", "diff"
   ],
   "maintainer": "BlueyOS Maintainers <maintainers@blueyos.example>",
   "homepage": "https://github.com/nzmacgeek/blueyos-base",
@@ -48,7 +49,21 @@
     "/usr/bin/date",
     "/usr/bin/tee",
     "/usr/bin/getent",
-    "/usr/bin/sort"
+    "/usr/bin/sort",
+    "/usr/bin/env",
+    "/usr/bin/printf",
+    "/usr/bin/test",
+    "/usr/bin/cp",
+    "/usr/bin/mv",
+    "/usr/bin/rm",
+    "/usr/bin/mkdir",
+    "/usr/bin/cat",
+    "/usr/bin/touch",
+    "/usr/bin/chmod",
+    "/usr/bin/chown",
+    "/usr/bin/stat",
+    "/usr/bin/which",
+    "/usr/bin/diff"
   ],
   "scripts": {}
 }
