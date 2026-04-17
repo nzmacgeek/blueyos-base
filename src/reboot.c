@@ -55,8 +55,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    /* Check if we're running as root */
-    if (getuid() != 0) {
+    /* Check if we're running as root (real or effective UID) */
+    if (getuid() != 0 && geteuid() != 0) {
         fprintf(stderr, "reboot: must be run as root\n");
         return 1;
     }
