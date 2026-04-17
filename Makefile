@@ -35,7 +35,8 @@ LDFLAGS += -L$(MUSL_LIB)
 UTILITIES = find grep sed usermod gpasswd groupadd groupdel groupmod \
 			uptime uname ps df du xargs print more less link ln \
 			hostname tail head kill pgrep ls lsof date tee getent sort \
-			env printf test cp mv rm mkdir cat touch chmod chown stat which diff
+			env printf test cp mv rm mkdir cat touch chmod chown stat which diff \
+			shutdown reboot halt poweroff
 BINARIES = $(addprefix $(BUILD_DIR)/,$(UTILITIES))
 
 # Package info
@@ -215,6 +216,18 @@ $(BUILD_DIR)/which: $(SRC_DIR)/which.c | $(BUILD_DIR) musl-check
 $(BUILD_DIR)/diff: $(SRC_DIR)/diff.c | $(BUILD_DIR) musl-check
 	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
 
+$(BUILD_DIR)/shutdown: $(SRC_DIR)/shutdown.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/reboot: $(SRC_DIR)/reboot.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/halt: $(SRC_DIR)/halt.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
+$(BUILD_DIR)/poweroff: $(SRC_DIR)/poweroff.c | $(BUILD_DIR) musl-check
+	$(CC) $(CFLAGS) -DVERSION=\"$(FULL_VERSION)\" -o $@ $< $(LDFLAGS) -lc
+
 # Install to payload directory for packaging
 install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/find $(INSTALL_DIR)/find
@@ -261,6 +274,10 @@ install: $(BINARIES) | $(INSTALL_DIR)
 	install -m 755 $(BUILD_DIR)/stat $(INSTALL_DIR)/stat
 	install -m 755 $(BUILD_DIR)/which $(INSTALL_DIR)/which
 	install -m 755 $(BUILD_DIR)/diff $(INSTALL_DIR)/diff
+	install -m 755 $(BUILD_DIR)/shutdown $(INSTALL_DIR)/shutdown
+	install -m 755 $(BUILD_DIR)/reboot $(INSTALL_DIR)/reboot
+	install -m 755 $(BUILD_DIR)/halt $(INSTALL_DIR)/halt
+	install -m 755 $(BUILD_DIR)/poweroff $(INSTALL_DIR)/poweroff
 	@echo "Installed utilities to $(INSTALL_DIR)"
 
 # Install to system sysroot (for image building)
@@ -314,6 +331,10 @@ install-sysroot: $(BINARIES)
 	install -m 755 $(BUILD_DIR)/stat $(SYSROOT)/usr/bin/stat
 	install -m 755 $(BUILD_DIR)/which $(SYSROOT)/usr/bin/which
 	install -m 755 $(BUILD_DIR)/diff $(SYSROOT)/usr/bin/diff
+	install -m 755 $(BUILD_DIR)/shutdown $(SYSROOT)/usr/bin/shutdown
+	install -m 755 $(BUILD_DIR)/reboot $(SYSROOT)/usr/bin/reboot
+	install -m 755 $(BUILD_DIR)/halt $(SYSROOT)/usr/bin/halt
+	install -m 755 $(BUILD_DIR)/poweroff $(SYSROOT)/usr/bin/poweroff
 	@echo "Installed utilities to $(SYSROOT)/usr/bin"
 
 # Create dimsim package
@@ -373,6 +394,10 @@ test: $(BINARIES)
 	@$(BUILD_DIR)/stat --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/which --version | grep -q "$(VERSION)"
 	@$(BUILD_DIR)/diff --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/shutdown --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/reboot --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/halt --version | grep -q "$(VERSION)"
+	@$(BUILD_DIR)/poweroff --version | grep -q "$(VERSION)"
 	@echo "Basic version tests passed"
 	@# Test find
 	@$(BUILD_DIR)/find $(SRC_DIR) -name "*.c" > /dev/null
@@ -410,7 +435,9 @@ clean:
 	       $(INSTALL_DIR)/cp $(INSTALL_DIR)/mv $(INSTALL_DIR)/rm \
 	       $(INSTALL_DIR)/mkdir $(INSTALL_DIR)/cat $(INSTALL_DIR)/touch \
 	       $(INSTALL_DIR)/chmod $(INSTALL_DIR)/chown $(INSTALL_DIR)/stat \
-	       $(INSTALL_DIR)/which $(INSTALL_DIR)/diff
+	       $(INSTALL_DIR)/which $(INSTALL_DIR)/diff \
+	       $(INSTALL_DIR)/shutdown $(INSTALL_DIR)/reboot $(INSTALL_DIR)/halt \
+	       $(INSTALL_DIR)/poweroff
 	@echo "Cleaned build artifacts"
 
 # Show version info

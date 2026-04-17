@@ -43,6 +43,12 @@ This package provides:
 #### Utilities
 - **which** - Locate a command in PATH
 
+### System Control
+- **shutdown** - Bring the system down (halt, poweroff, or reboot)
+- **reboot** - Reboot the system
+- **halt** - Halt the system
+- **poweroff** - Power off the system
+
 ### User and Group Management
 - **usermod** - Modify user account and group membership
 - **gpasswd** - Administer /etc/group (add/remove users from groups)
@@ -208,6 +214,74 @@ Examples:
 ```
 
 **Note**: All group management utilities (`groupadd`, `groupdel`, `groupmod`) require root privileges.
+
+### shutdown
+
+Bring the system down:
+
+```bash
+shutdown [OPTIONS]
+  -h, --halt       Halt the system (don't power off)
+  -P, --poweroff   Power off the system (default)
+  -r, --reboot     Reboot the system
+  -n, --no-sync    Don't sync before shutdown
+  -f, --force      Force immediate shutdown (skip sync)
+  -v, --verbose    Verbose output
+
+Examples:
+  shutdown              # Power off the system (default)
+  shutdown -h           # Halt the system without powering off
+  shutdown -r           # Reboot the system
+  shutdown -f -P        # Force immediate poweroff without sync
+```
+
+### reboot
+
+Reboot the system:
+
+```bash
+reboot [OPTIONS]
+  -f, --force      Force immediate reboot (skip sync)
+  -n, --no-sync    Don't sync before reboot
+  -v, --verbose    Verbose output
+
+Examples:
+  reboot               # Reboot the system
+  reboot -f            # Force immediate reboot
+```
+
+### halt
+
+Halt the system:
+
+```bash
+halt [OPTIONS]
+  -p, --poweroff   Power off after halt
+  -f, --force      Force immediate halt (skip sync)
+  -n, --no-sync    Don't sync before halt
+  -v, --verbose    Verbose output
+
+Examples:
+  halt                 # Halt the system
+  halt -p              # Halt and power off
+```
+
+### poweroff
+
+Power off the system:
+
+```bash
+poweroff [OPTIONS]
+  -f, --force      Force immediate poweroff (skip sync)
+  -n, --no-sync    Don't sync before poweroff
+  -v, --verbose    Verbose output
+
+Examples:
+  poweroff             # Power off the system
+  poweroff -f          # Force immediate poweroff
+```
+
+**Note**: All system control utilities (`shutdown`, `reboot`, `halt`, `poweroff`) require root privileges.
 
 ## Package Information
 
