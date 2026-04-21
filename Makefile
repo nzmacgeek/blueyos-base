@@ -336,6 +336,10 @@ install-sysroot: $(BINARIES)
 	install -m 755 $(BUILD_DIR)/halt $(SYSROOT)/usr/bin/halt
 	install -m 755 $(BUILD_DIR)/poweroff $(SYSROOT)/usr/bin/poweroff
 	@echo "Installed utilities to $(SYSROOT)/usr/bin"
+	install -d $(SYSROOT)/root
+	install -m 644 $(PAYLOAD_DIR)/root/.profile $(SYSROOT)/root/.profile
+	install -m 644 $(PAYLOAD_DIR)/root/.bashrc $(SYSROOT)/root/.bashrc
+	@echo "Installed /root home files to $(SYSROOT)/root"
 
 # Create dimsim package
 # Stamps the computed PACKAGE_VERSION into meta/manifest.json, invokes dpkbuild
