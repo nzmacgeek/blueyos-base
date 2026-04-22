@@ -340,6 +340,20 @@ install-sysroot: $(BINARIES)
 	install -m 644 $(PAYLOAD_DIR)/root/.profile $(SYSROOT)/root/.profile
 	install -m 644 $(PAYLOAD_DIR)/root/.bashrc $(SYSROOT)/root/.bashrc
 	@echo "Installed /root home files to $(SYSROOT)/root"
+	install -d $(SYSROOT)/sbin
+	install -m 755 $(PAYLOAD_DIR)/sbin/bash-watch $(SYSROOT)/sbin/bash-watch
+	@echo "Installed bash-watch to $(SYSROOT)/sbin"
+	install -d $(SYSROOT)/etc/claw/services.d
+	install -m 644 $(PAYLOAD_DIR)/etc/claw/services.d/bash-watch.service.yml \
+	    $(SYSROOT)/etc/claw/services.d/bash-watch.service.yml
+	@echo "Installed bash-watch.service.yml to $(SYSROOT)/etc/claw/services.d"
+	@if [ -f $(SYSROOT)/etc/claw/units.manifest ]; then \
+	    if ! grep -qF /etc/claw/services.d/bash-watch.service.yml \
+	            $(SYSROOT)/etc/claw/units.manifest; then \
+	        echo /etc/claw/services.d/bash-watch.service.yml \
+	            >> $(SYSROOT)/etc/claw/units.manifest; \
+	    fi; \
+	fi
 
 # Create dimsim package
 # Stamps the computed PACKAGE_VERSION into meta/manifest.json, invokes dpkbuild
