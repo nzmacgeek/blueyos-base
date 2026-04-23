@@ -1,0 +1,12 @@
+# /etc/claw/services.d/bash-watch.service.yml
+# Diagnostic: poll for the bash login sentinel file (/root/bash_started).
+# Results are written to /var/log/bash-watch.log and can be extracted with
+# `baker extract` after a non-snapshot VM run.
+name: bash-watch
+description: "Diagnostic: poll for bash login sentinel (/root/bash_started)"
+type: simple
+start_cmd: /bin/bash -c 'echo "=== bash-watch starting ==="; ls /; echo "=== ls done ==="; uname -a; echo "=== uname done ==="'
+user: root
+restart: always
+restart_delay: 5
+after: claw-basic.target

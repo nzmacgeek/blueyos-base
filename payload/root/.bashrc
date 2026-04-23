@@ -1,23 +1,11 @@
 # /root/.bashrc — root interactive shell initialisation
-# Sourced by bash for interactive non-login shells, and via .profile for
-# login shells.
-#
-# Diagnostic: write a marker file so we know bash is running even if the
-# terminal is not displaying output.
+# Sourced by bash for interactive non-login shells, and via .profile for login shells.
 
-# Record that bash is running.
-mkdir -p /root
-printf '[%s] .bashrc sourced (pid=%s tty=%s login=%s)\n' \
-    "$(date 2>/dev/null || echo unknown)" \
-    "$$" \
-    "$(tty 2>/dev/null || echo unknown)" \
-    "$( [ -o login_shell ] && echo yes || echo no )" \
-    >> /root/bash_started
+# Write sentinel file using only shell builtins (no command substitutions).
+printf '%s\n' "[.bashrc] bash started pid=$$" > /root/bash_started
 
-echo "[root .bashrc] bash is running (pid=$$, tty=$(tty 2>/dev/null || echo ?))"
-echo "[root .bashrc] TERM=${TERM:-<unset>}  HOME=${HOME:-<unset>}  SHELL=${SHELL:-<unset>}"
+echo "[.bashrc] bash is running (pid=$$)"
+echo "[.bashrc] TERM=${TERM:-<unset>}  HOME=${HOME:-<unset>}  SHELL=${SHELL:-<unset>}"
 
-# Basic prompt.
-PS1='[\u@\h \W]\$ '
-
+PS1='[root@blueyos]# '
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin

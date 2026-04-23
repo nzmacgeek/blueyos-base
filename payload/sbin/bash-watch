@@ -1,31 +1,12 @@
 #!/bin/sh
 # /sbin/bash-watch — diagnostic service managed by claw.
-#
-# Polls every 5 seconds for the bash login sentinel file written by
-# /root/.bashrc and /root/.profile.  Results go to /var/log/bash-watch.log
-# so they survive the session and can be read with `baker extract`.
-
-LOG=/var/log/bash-watch.log
-SENTINEL=/root/bash_started
+# Simplified: no pipes, no subshells, no date/wc - just progress markers.
 
 mkdir -p /var/log
+echo "bw-step-1-mkdir-done" >> /root/bw.log
 
-ts() { date 2>/dev/null || echo "?"; }
-
-echo "[$(ts)] bash-watch started (pid=$$)" >> "$LOG"
-
-LAST_SIZE=0
+echo "bw-step-2-entering-while" >> /root/bw.log
 while true; do
-    if [ -f "$SENTINEL" ]; then
-        CUR_SIZE="$(wc -c < "$SENTINEL" 2>/dev/null || echo 0)"
-        if [ "$CUR_SIZE" != "$LAST_SIZE" ]; then
-            echo "[$(ts)] /root/bash_started updated (size=${CUR_SIZE} bytes):" >> "$LOG"
-            cat "$SENTINEL" >> "$LOG" 2>/dev/null
-            echo "[$(ts)] --- end sentinel ---" >> "$LOG"
-            LAST_SIZE="$CUR_SIZE"
-        fi
-    else
-        echo "[$(ts)] waiting — /root/bash_started not present yet" >> "$LOG"
-    fi
+    echo "bw-loop" >> /root/bw.log
     sleep 5
 done

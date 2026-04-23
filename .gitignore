@@ -19,6 +19,7 @@ payload/usr/lib/*
 *.d
 *.cmd
 .*.cmd
+!payload/etc/claw/services.d/
 
 # dimsim packages (from BlueyOS packaging)
 *.dpkg
